@@ -1,0 +1,59 @@
+
+syntax = "proto3";
+package messages;
+
+option go_package = "messages";
+
+message NetworkMessage {
+    enum MessageType {
+
+        // Add a client submission key
+        ClientRegister = 0;
+        // Request a message be signed
+        // return blind token partial signature
+        ClientTokenRequest = 1;
+        // Submit a message for the next round
+        // return boomerang delivery receipt
+        ClientMessageSubmission = 2;
+
+        // Receive a share of a key
+        KeySharePush = 3;
+
+
+        // Forward messages to the next layer
+        ServerMessageForward = 4;
+        // Forward message to the previous layer
+        ServerMessageReverse = 6;
+
+        // Forward a message with the token
+        PathMessageForward = 7;
+
+        // Forward tokens to checkpoint servers
+        // return boomerang decryption key
+        GroupCheckpointToken = 8;
+
+        // Send message for final trustee decryption
+        GroupCheckpointSignature = 9; 
+
+        // Wait for a message delivery receipt
+        ClientGetReceipt = 10;
+    }
+    MessageType messageType = 1;
+    bytes data = 2; // also contains metadata that is signed
+    bytes signature = 3;
+}
+
+message SkipPathGenMessage {
+    int32 layer = 1;
+    int32 group = 2;
+    int32 forwarding_server = 3;
+    bytes forward_key = 4;
+    int32 sending_server = 5;
+    bytes sending_key = 6;
+}
+
+service MessageHandlers {
+    rpc HandleSignedMessage(NetworkMessage) returns (NetworkMessage) {};
+    rpc HealthCheck(NetworkMessage) returns (NetworkMessage) {};
+    rpc SkipPathGen(SkipPathGenMessage) returns (NetworkMessage) {};
+}

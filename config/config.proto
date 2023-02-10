@@ -1,0 +1,37 @@
+syntax = "proto3";
+package config;
+
+// Fields that are secrets are included here for convience
+// public value and server members agreement is out of scope
+// Each server would have their own secrets
+message Server {
+  // Server address (public)
+  string address = 1; 
+  int64 id = 2;
+  // TLS certificate (public)
+  bytes identity = 3;
+  // Secret for certificate (this should not be public)
+  bytes private_identity = 4;
+  // Public key for authenticated encryption to this server (public)
+  bytes public_key = 5;
+  // Secret for authenticated encryption (this should not be public)
+  bytes private_key = 6;
+  // Key to verify this servers signature (public)
+  bytes verification_key = 7;
+  // Signature key (this should not be public)
+  bytes signature_key = 8;
+}
+
+message Group {
+  int64 gid = 1;
+  // server ids of this group
+  repeated int64 servers = 4;
+}
+
+message Servers {
+  map<int64,Server> servers = 1;
+}
+
+message Groups {
+  map<int64,Group> groups = 1;
+}

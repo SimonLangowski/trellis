@@ -1,0 +1,82 @@
+syntax = "proto3";
+package coord;
+
+message KeyInformation {
+  int64 groupId = 1;
+  // Token public key
+  bytes token_public_key = 2;
+  // Secret share
+  bytes token_key_share = 3;
+  // Group key
+  bytes group_key = 4;
+  // Group share
+  bytes group_share = 5;
+}
+
+message RoundInfo {
+    int64 round = 1;
+    int64 numLayers = 2;
+    int64 binSize = 3;
+    bool  pathEstablishment = 4;
+    bool  lastLayer = 5;
+    int64 messageSize = 6;
+
+    int64 startId = 7;
+    int64 endId = 8;
+    KeyInformation public_keys = 9;
+    int64 receiptLayer = 10;
+    int64 boomerangLimit = 11;
+    int64 nextLayer = 12;
+
+    bool check = 13;
+    int64 interval = 14;
+    bool skipPathGen = 15;
+}
+
+message ServerMessages {
+    repeated bytes messages = 1;
+}
+
+// to skip path establishment and only test broadcast
+message BootstrapKey {
+  int64 clientId = 1;
+  int64 serverId = 2;
+  int64 layer = 3;
+  // server that decrypted messages will be sent to
+  int64 forwardingServer = 4;
+  int64 prevServer = 5;
+  bytes privateKey = 6;
+  bytes publicKey = 7;
+  bytes sharedKey = 8; 
+  // (public) keys appended for next destination
+  bytes nextKey = 9;
+}
+
+message PathKeys {
+  repeated BootstrapKey keys = 1;
+}
+
+// to skip message creation and only test routing
+message TestMessages {
+  repeated int64 startingServers = 1;
+  repeated bytes ciphers = 2;
+}
+
+message Empty {
+
+}
+
+service CoordinatorHandler {
+    // Signal servers to exchange keys, after all servers online
+    rpc KeySet(KeyInformation) returns (KeyInformation) {};
+    // Signal setup of a new round
+    rpc RoundSetup(RoundInfo) returns (Empty) {};
+    // Signal clients to submit messages, after the round has been setup
+    rpc ClientStart(RoundInfo) returns (Empty) {};
+    // Signal the start of a round, at the time after clients have submitted messages
+    rpc RoundStart(RoundInfo) returns (Empty) {};
+    // Signal clients to check receipts, at the time after the round and before the next
+    rpc CheckReceipt(RoundInfo) returns (Empty) {};
+    // Check that the final output messages are correct; used to time end of round
+    rpc GetMessages(RoundInfo) returns (ServerMessages) {};
+}
